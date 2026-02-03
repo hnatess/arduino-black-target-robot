@@ -1,55 +1,51 @@
 # Autonomous Robot: Obstacle Avoidance + Black Target Navigation (Arduino)
 
-This project is a 2-wheel differential drive robot built with **Arduino UNO**.  
-It **avoids obstacles** using an **HC-SR04 ultrasonic sensor** and **navigates on a white floor to a black target area** using **two reflectance (line) sensors**.  
-After reaching the target (both sensors detect black), the robot **replays its logged motion in reverse** to return to the start point.
+A 2-wheel differential drive robot built with **Arduino UNO** that:
+1) **Avoids obstacles** using an **HC-SR04 ultrasonic sensor**
+2) **Navigates on a white floor to a black target area** using **two reflectance (line) sensors**
+3) **Logs motion steps** and **replays them in reverse** to return to the start point
 
-## Demo / Hardware Photos
+## Hardware Photos
 ![Front view](images/robot-front.jpg)
 ![Top view](images/robot-top.jpg)
 ![Bottom view](images/robot-bottom.jpg)
 
-## Key Features
-- **Obstacle avoidance** with distance threshold (HC-SR04)
-- **Black target detection** on white floor (dual analog sensors)
-- **Finite state machine**: SEARCH → APPROACH → TARGET_FOUND → RETURNING → DONE
-- **Motion logging**: saves motor commands and durations, then **reverses them** for return-to-start
+## System Overview
+**Controller:** Arduino UNO  
+**Actuation:** 2x DC gear motors (differential drive) + L298N motor driver  
+**Sensing:** HC-SR04 distance + 2x reflectance sensors (black/white detection)  
+**Power:** Battery pack (chassis mounted)
 
-## Hardware
-- Arduino UNO
-- L298N motor driver (2 DC gear motors)
-- HC-SR04 ultrasonic sensor
-- 2x reflectance / line sensors (analog)
-- Battery pack + robot chassis
+## Core Behaviors (Algorithm)
+- **Search / Cruise:** robot moves forward and scans
+- **Obstacle Avoidance:** if distance < threshold → avoid maneuver (turn + continue)
+- **Black Target Approach:** steering logic based on left/right sensor readings
+- **Target Found:** when both sensors detect black → stop and mark success
+- **Return to Start:** replay recorded motor commands **in reverse order** (reverse PWM)
 
-## Pin Mapping (from the code)
+## Code
+- `siyah_nokta_gidis_donus_engeleden_kacma.ino` — main Arduino sketch
+
+## Pin Mapping (as used in the code)
 ### Motor driver (L298N)
-- ENA = 5, ENB = 6
-- IN1 = 7, IN2 = 8, IN3 = 9, IN4 = 10
+- ENA = 5, ENB = 6  
+- IN1 = 7, IN2 = 8, IN3 = 9, IN4 = 10  
 
-### Line / black sensors (analog)
-- Left sensor  = A1
-- Right sensor = A0
+### Reflectance sensors (analog)
+- Right sensor = A0  
+- Left sensor  = A1  
 
-### HC-SR04
-- TRIG = 12
-- ECHO = 11
+### Ultrasonic sensor (HC-SR04)
+- TRIG = 12  
+- ECHO = 11  
 
-## How it works (Algorithm)
-1. **SEARCH:** robot moves forward with a gentle left-right oscillation to scan the area.
-2. **APPROACH:** if one sensor sees black, it steers to center the black region.
-3. **TARGET_FOUND:** when both sensors detect black, it stops and finalizes the motion log.
-4. **RETURNING:** it replays the recorded motor segments **in reverse** (negated PWM) to return.
-5. **Obstacle priority:** if an obstacle is closer than the threshold, it performs an avoidance maneuver (also logged).
-
-## Running the Code
-1. Open `src/siyah_nokta_gidis_donus_engeleden_kacma.ino` in Arduino IDE
-2. Select board: **Arduino Uno**
+## How to Run
+1. Open the `.ino` file in **Arduino IDE**
+2. Select Board: **Arduino Uno**
 3. Select the correct COM port
 4. Upload
 
-## Calibration Notes
-- `THRESH_BLACK` sets the black detection threshold (default: 600).  
-  Adjust based on your sensors and surface.
-- `OBSTACLE_CM` sets obstacle distance (default: 18 cm).
-- `baseSpeed / turnSpeed` can be tuned for smoother approach.
+## Tuning / Calibration
+- `THRESH_BLACK` → adjust based on sensor + surface (black detection)
+- `OBSTACLE_CM` → obstacle distance threshold
+- `baseSpeed`, `turnSpeed` → smoother control and turning
